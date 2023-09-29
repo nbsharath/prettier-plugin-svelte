@@ -1,4 +1,4 @@
-# Prettier for Svelte 3 components
+# Prettier for Svelte components
 
 Format your Svelte components using Prettier.
 
@@ -26,7 +26,7 @@ Some of the extensions let you define options through extension-specific configu
 
 ## How to install manually
 
-First install Prettier and the plugin as a dev depenendency:
+First install Prettier and the plugin as a dev dependency:
 
 ```bash
 npm i --save-dev prettier-plugin-svelte prettier
@@ -133,44 +133,6 @@ Example:
 | Default | CLI Override                      | API Override                   |
 | ------- | --------------------------------- | ------------------------------ |
 | `true`  | `--svelte-allow-shorthand <bool>` | `svelteAllowShorthand: <bool>` |
-
-### Svelte Self Closing Elements
-
-Whether or not empty elements (such as `div`s) should be self-closed or not.
-
-Example:
-
-<!-- prettier-ignore -->
-```html
-<!-- svelteSelfCloseElements: "always" -->
-<div />
-
-<!-- svelteSelfCloseElements: "never" -->
-<div></div>
-```
-
-| Default   | CLI Override                         | API Override                       |
-| --------- | ------------------------------------ | ---------------------------------- | -------- |
-| `"never"` | `--svelte-self-close-elements <str>` | `svelteSelfCloseElements: "always" | "never"` |
-
-### Svelte Self Closing Components
-
-Whether or not empty components should be self-closed or not.
-
-Example:
-
-<!-- prettier-ignore -->
-```html
-<!-- svelteSelfCloseComponents: "always" -->
-<Component />
-
-<!-- svelteSelfCloseComponents: "never" -->
-<Component></Component>
-```
-
-| Default    | CLI Override                           | API Override                         |
-| ---------- | -------------------------------------- | ------------------------------------ | -------- |
-| `"always"` | `--svelte-self-close-components <str>` | `svelteSelfCloseComponents: "always" | "never"` |
 
 ### Svelte Bracket New Line
 

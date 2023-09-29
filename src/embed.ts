@@ -1,3 +1,4 @@
+import { base64ToString } from './helpers';
 import { Doc, doc, FastPath, Options } from 'prettier';
 import { getText } from './lib/getText';
 import { snippedTagContentAttribute } from './lib/snipTagContent';
@@ -11,8 +12,10 @@ import {
     getLeadingComment,
     isIgnoreDirective,
     isInsideQuotedAttribute,
+    isLess,
     isNodeSupportedLanguage,
     isPugTemplate,
+    isScss,
     isTypeScript,
     printRaw,
 } from './print/node-helpers';
@@ -151,7 +154,7 @@ export function embed(path: FastPath, _options: Options) {
 
     const embedType = (
         tag: 'script' | 'style' | 'template',
-        parser: 'typescript' | 'babel-ts' | 'css' | 'pug',
+        parser: 'typescript' | 'babel-ts' | 'css' | 'scss' | 'less' | 'pug',
         isTopLevel: boolean,
     ) => {
         return async (
@@ -180,7 +183,8 @@ export function embed(path: FastPath, _options: Options) {
             isTypeScript(node) ? 'typescript' : 'babel-ts',
             isTopLevel,
         );
-    const embedStyle = (isTopLevel: boolean) => embedType('style', 'css', isTopLevel);
+    const embedStyle = (isTopLevel: boolean) =>
+        embedType('style', isLess(node) ? 'less' : isScss(node) ? 'scss' : 'css', isTopLevel);
     const embedPug = () => embedType('template', 'pug', false);
 
     switch (node.type) {
@@ -225,7 +229,7 @@ function getSnippedContent(node: Node) {
     const encodedContent = getAttributeTextValue(snippedTagContentAttribute, node);
 
     if (encodedContent) {
-        return Buffer.from(encodedContent, 'base64').toString('utf-8');
+        return base64ToString(encodedContent);
     } else {
         return '';
     }
@@ -233,7 +237,7 @@ function getSnippedContent(node: Node) {
 
 async function formatBodyContent(
     content: string,
-    parser: 'typescript' | 'babel-ts' | 'css' | 'pug',
+    parser: 'typescript' | 'babel-ts' | 'css' | 'scss' | 'less' | 'pug',
     textToDoc: (text: string, options: object) => Promise<Doc>,
     options: ParserOptions & { pugTabWidth?: number },
 ) {
@@ -349,7 +353,7 @@ function printJS(
     removeParentheses: boolean,
     name: string,
 ) {
-    if (!node[name]) {
+    if (!node[name] || typeof node[name] !== 'object') {
         return;
     }
     node[name].isJS = true;

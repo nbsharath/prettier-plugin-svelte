@@ -1,8 +1,20 @@
 # prettier-plugin-svelte changelog
 
-## 3.0.0 (Unreleased)
+## 3.0.3
 
--   (breaking) requires `prettier` version 3
+-   (fix) handle static `tag` attributes on `<svelte:element>`
+
+## 3.0.2
+
+-   (fix) add `package.json` to exports map
+
+## 3.0.1
+
+-   (fix) support less/scss in style tags
+
+## 3.0.0
+
+-   (breaking) requires `prettier` version 3. This may require adjustments to your configuration file, see [the migration guide for more info](https://github.com/sveltejs/prettier-plugin-svelte#how-to-migrate-from-version-2-to-3)
 -   (breaking) requires node version 14 or higher
 -   (breaking) Whether or not empty elements/components should self-close is now left to the user - in other words, if you write `<div />` or `<Component />` that stays as is, and so does `<div></div>`/`<Component></Component>`. If `svelteStrictMode` is turned on, it will still only allow `<div></div>` notation for elements (but it will leave your components alone)
 -   (breaking) `svelteAllowShorthand` now takes precedence over `svelteStrictMode`, which no longer has any effect on that behavior. Set `svelteAllowShorthand` to `false` to get back the v2 behavior

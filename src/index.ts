@@ -4,6 +4,7 @@ import { hasPragma, print } from './print';
 import { ASTNode } from './print/nodes';
 import { embed, getVisitorKeys } from './embed';
 import { snipScriptAndStyleTagContent } from './lib/snipTagContent';
+import { parse as parseSvelte } from 'svelte/compiler';
 
 const babelParser = prettierPluginBabel.parsers.babel;
 
@@ -29,7 +30,8 @@ export const parsers: Record<string, Parser> = {
         hasPragma,
         parse: (text) => {
             try {
-                return <ASTNode>{ ...require(`svelte/compiler`).parse(text), __isRoot: true };
+                // @ts-ignore
+                return <ASTNode>{ ...parseSvelte(text), __isRoot: true };
             } catch (err: any) {
                 if (err.start != null && err.end != null) {
                     // Prettier expects error objects to have loc.start and loc.end fields.

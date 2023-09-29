@@ -1,3 +1,5 @@
+import { base64ToString, stringToBase64 } from '../helpers';
+
 export const snippedTagContentAttribute = '✂prettier:content✂';
 
 export function snipScriptAndStyleTagContent(source: string): string {
@@ -37,7 +39,7 @@ export function snipScriptAndStyleTagContent(source: string): string {
             if (match.startsWith('<!--') || withinOtherSpan(index)) {
                 return match;
             }
-            const encodedContent = Buffer.from(content).toString('base64');
+            const encodedContent = stringToBase64(content);
             const newContent = `<${tagName}${attributes} ${snippedTagContentAttribute}="${encodedContent}">${placeholder}</${tagName}>`;
 
             // Adjust the spans because the source now has a different content length
@@ -92,7 +94,7 @@ export function unsnipContent(text: string): string {
     const regex = /(<\w+.*?)\s*✂prettier:content✂="(.*?)">.*?(?=<\/)/gi;
 
     return text.replace(regex, (_, start, encodedContent) => {
-        const content = Buffer.from(encodedContent, 'base64').toString('utf8');
+        const content = base64ToString(encodedContent);
         return `${start}>${content}`;
     });
 }
