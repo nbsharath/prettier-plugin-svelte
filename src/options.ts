@@ -1,24 +1,14 @@
-import { ParserOptions, SupportOption } from 'prettier';
+import { ParserOptions as PrettierParserOptions, SupportOption } from 'prettier';
+import { SortOrder, PluginConfig } from '..';
 
-declare module 'prettier' {
-    interface RequiredOptions extends PluginOptions {}
-}
-
-export interface PluginOptions {
-    svelteSortOrder: SortOrder;
-    svelteStrictMode: boolean;
-    svelteBracketNewLine: boolean;
-    svelteAllowShorthand: boolean;
-    svelteIndentScriptAndStyle: boolean;
-}
+export interface ParserOptions<T = any> extends PrettierParserOptions<T>, Partial<PluginConfig> {}
 
 function makeChoice(choice: string) {
     return { value: choice, description: choice };
 }
 
-export const options: Record<keyof PluginOptions, SupportOption> = {
+export const options: Record<keyof PluginConfig, SupportOption> = {
     svelteSortOrder: {
-        since: '0.6.0',
         category: 'Svelte',
         type: 'choice',
         default: 'options-scripts-markup-styles',
@@ -48,31 +38,22 @@ export const options: Record<keyof PluginOptions, SupportOption> = {
             makeChoice('markup-scripts-styles-options'),
             makeChoice('styles-markup-scripts-options'),
             makeChoice('styles-scripts-markup-options'),
-            // Deprecated, keep in 2.x for backwards-compatibility. svelte:options will be moved to the top
-            makeChoice('scripts-markup-styles'),
-            makeChoice('scripts-styles-markup'),
-            makeChoice('markup-styles-scripts'),
-            makeChoice('markup-scripts-styles'),
-            makeChoice('styles-markup-scripts'),
-            makeChoice('styles-scripts-markup'),
+            makeChoice('none'),
         ],
     },
     svelteStrictMode: {
-        since: '0.7.0',
         category: 'Svelte',
         type: 'boolean',
         default: false,
-        description: 'More strict HTML syntax: self-closed tags, quotes in attributes',
+        description: 'More strict HTML syntax: Quotes in attributes, no self-closing DOM tags',
     },
     svelteBracketNewLine: {
-        since: '0.6.0',
         category: 'Svelte',
         type: 'boolean',
         description: 'Put the `>` of a multiline element on a new line',
         deprecated: '2.5.0',
     },
     svelteAllowShorthand: {
-        since: '1.0.0',
         category: 'Svelte',
         type: 'boolean',
         default: true,
@@ -80,7 +61,6 @@ export const options: Record<keyof PluginOptions, SupportOption> = {
             'Option to enable/disable component attribute shorthand if attribute name and expressions are same',
     },
     svelteIndentScriptAndStyle: {
-        since: '1.2.0',
         category: 'Svelte',
         type: 'boolean',
         default: true,
@@ -89,53 +69,21 @@ export const options: Record<keyof PluginOptions, SupportOption> = {
     },
 };
 
-export type SortOrder =
-    | 'options-scripts-markup-styles'
-    | 'options-scripts-styles-markup'
-    | 'options-markup-styles-scripts'
-    | 'options-markup-scripts-styles'
-    | 'options-styles-markup-scripts'
-    | 'options-styles-scripts-markup'
-    | 'scripts-options-markup-styles'
-    | 'scripts-options-styles-markup'
-    | 'markup-options-styles-scripts'
-    | 'markup-options-scripts-styles'
-    | 'styles-options-markup-scripts'
-    | 'styles-options-scripts-markup'
-    | 'scripts-markup-options-styles'
-    | 'scripts-styles-options-markup'
-    | 'markup-styles-options-scripts'
-    | 'markup-scripts-options-styles'
-    | 'styles-markup-options-scripts'
-    | 'styles-scripts-options-markup'
-    | 'scripts-markup-styles-options'
-    | 'scripts-styles-markup-options'
-    | 'markup-styles-scripts-options'
-    | 'markup-scripts-styles-options'
-    | 'styles-markup-scripts-options'
-    | 'styles-scripts-markup-options'
-    | DeprecatedSortOrder;
-
-export type DeprecatedSortOrder =
-    | 'scripts-markup-styles'
-    | 'scripts-styles-markup'
-    | 'markup-styles-scripts'
-    | 'markup-scripts-styles'
-    | 'styles-markup-scripts'
-    | 'styles-scripts-markup';
-
 export type SortOrderPart = 'scripts' | 'markup' | 'styles' | 'options';
 
 const sortOrderSeparator = '-';
 
-export function parseSortOrder(sortOrder: SortOrder): SortOrderPart[] {
+export function parseSortOrder(
+    sortOrder: SortOrder = 'options-scripts-markup-styles',
+): SortOrderPart[] {
+    if (sortOrder === 'none') {
+        return [];
+    }
+
     const order = sortOrder.split(sortOrderSeparator) as SortOrderPart[];
     // For backwards compatibility: Add options to beginning if not present
     if (!order.includes('options')) {
-        console.warn(
-            'svelteSortOrder is missing option `options`. This will be an error in prettier-plugin-svelte version 3.',
-        );
-        order.unshift('options');
+        throw new Error('svelteSortOrder is missing option `options`');
     }
     return order;
 }

@@ -1,6 +1,25 @@
-import { ASTNode, Node } from './nodes';
-import { Doc, FastPath } from 'prettier';
+import { Doc, doc, FastPath } from 'prettier';
+import { PrintFn } from '.';
 import { formattableAttributes } from '../lib/elements';
+import { snippedTagContentAttribute } from '../lib/snipTagContent';
+import {
+    ASTNode,
+    AttributeNode,
+    BodyNode,
+    DocumentNode,
+    ElementNode,
+    HeadNode,
+    InlineComponentNode,
+    Node,
+    OptionsNode,
+    ScriptNode,
+    SlotNode,
+    SlotTemplateNode,
+    StyleNode,
+    TitleNode,
+    WindowNode
+} from './nodes';
+import { ParserOptions } from '../options';
 
 /**
  * Determines whether or not given node
@@ -47,4 +66,57 @@ export function replaceEndOfLineWith(text: string, replacement: Doc) {
         }
     }
     return parts;
+}
+
+export function getAttributeLine(
+    node:
+        | ElementNode
+        | InlineComponentNode
+        | SlotNode
+        | WindowNode
+        | HeadNode
+        | TitleNode
+        | StyleNode
+        | ScriptNode
+        | BodyNode
+        | DocumentNode
+        | OptionsNode
+        | SlotTemplateNode,
+    options: ParserOptions,
+) {
+    const { hardline, line } = doc.builders;
+    const hasThisBinding =
+        (node.type === 'InlineComponent' && !!node.expression) ||
+        (node.type === 'Element' && !!node.tag);
+
+    const attributes = (node.attributes as Array<AttributeNode>).filter(
+        (attribute) => attribute.name !== snippedTagContentAttribute,
+    );
+    return options.singleAttributePerLine &&
+        (attributes.length > 1 || (attributes.length && hasThisBinding))
+        ? hardline
+        : line;
+}
+
+export function printWithPrependedAttributeLine(
+    node:
+        | ElementNode
+        | InlineComponentNode
+        | SlotNode
+        | WindowNode
+        | HeadNode
+        | TitleNode
+        | StyleNode
+        | ScriptNode
+        | BodyNode
+        | DocumentNode
+        | OptionsNode
+        | SlotTemplateNode,
+    options: ParserOptions,
+    print: PrintFn,
+): PrintFn {
+    return (path) =>
+        path.getNode().name !== snippedTagContentAttribute
+            ? [getAttributeLine(node, options), path.call(print)]
+            : '';
 }

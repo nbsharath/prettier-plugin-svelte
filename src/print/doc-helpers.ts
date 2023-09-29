@@ -33,13 +33,15 @@ function deepEqual(x: any, y: any): boolean {
     }
 }
 
+function isDocCommand(doc: Doc): doc is doc.builders.DocCommand {
+    return typeof doc === 'object' && doc !== null;
+}
+
 export function isLine(docToCheck: Doc): boolean {
     return (
         isHardline(docToCheck) ||
-        (typeof docToCheck === 'object' && docToCheck.type === 'line') ||
-        (typeof docToCheck === 'object' &&
-            docToCheck.type === 'concat' &&
-            docToCheck.parts.every(isLine))
+        (isDocCommand(docToCheck) && docToCheck.type === 'line') ||
+        (Array.isArray(docToCheck) && docToCheck.every(isLine))
     );
 }
 
@@ -51,11 +53,10 @@ export function isEmptyDoc(doc: Doc): boolean {
         return doc.length === 0;
     }
 
-    if (doc.type === 'line') {
+    if (isDocCommand(doc) && doc.type === 'line') {
         return !doc.keepIfLonely;
     }
 
-    // Since Prettier 2.3.0, concats are represented as flat arrays
     if (Array.isArray(doc)) {
         return doc.length === 0;
     }
@@ -140,15 +141,21 @@ export function trimRight(group: Doc[], isWhitespace: (doc: Doc) => boolean): vo
 
 function getParts(doc: Doc): Doc[] | undefined {
     if (typeof doc === 'object') {
-        // Since Prettier 2.3.0, concats are represented as flat arrays
         if (Array.isArray(doc)) {
             return doc;
         }
-        if (doc.type === 'fill' || doc.type === 'concat') {
+        if (doc.type === 'fill') {
             return doc.parts;
         }
         if (doc.type === 'group') {
             return getParts(doc.contents);
         }
     }
+}
+
+/**
+ * `(foo = bar)` => `foo = bar`
+ */
+export function removeParentheses(doc: Doc): Doc {
+    return trim([doc], (_doc: Doc) => _doc === '(' || _doc === ')')[0];
 }

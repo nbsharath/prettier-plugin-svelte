@@ -1,9 +1,12 @@
 import { SupportLanguage, Parser, Printer } from 'prettier';
-import { print } from './print';
+import * as prettierPluginBabel from 'prettier/plugins/babel';
+import { hasPragma, print } from './print';
 import { ASTNode } from './print/nodes';
-import { embed } from './embed';
+import { embed, getVisitorKeys } from './embed';
 import { snipScriptAndStyleTagContent } from './lib/snipTagContent';
 import { parse as parseSvelte } from 'svelte/compiler';
+
+const babelParser = prettierPluginBabel.parsers.babel;
 
 function locStart(node: any) {
     return node.start;
@@ -24,11 +27,12 @@ export const languages: Partial<SupportLanguage>[] = [
 
 export const parsers: Record<string, Parser> = {
     svelte: {
+        hasPragma,
         parse: (text) => {
             try {
                 // @ts-ignore
                 return <ASTNode>{ ...parseSvelte(text), __isRoot: true };
-            } catch (err) {
+            } catch (err: any) {
                 if (err.start != null && err.end != null) {
                     // Prettier expects error objects to have loc.start and loc.end fields.
                     // Svelte uses start and end directly on the error.
@@ -56,12 +60,22 @@ export const parsers: Record<string, Parser> = {
         locEnd,
         astFormat: 'svelte-ast',
     },
+    svelteExpressionParser: {
+        ...babelParser,
+        parse: (text: string, options: any) => {
+            const ast = babelParser.parse(text, options);
+
+            return { ...ast, program: ast.program.body[0].expression };
+        },
+    },
 };
 
 export const printers: Record<string, Printer> = {
     'svelte-ast': {
         print,
         embed,
+        // @ts-expect-error Prettier's type definitions are wrong
+        getVisitorKeys,
     },
 };
 

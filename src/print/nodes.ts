@@ -4,6 +4,7 @@ export interface BaseNode {
     isJS?: boolean;
     forceSingleQuote?: boolean;
     forceSingleLine?: boolean;
+    removeParentheses?: boolean;
 }
 
 export interface FragmentNode extends BaseNode {
@@ -16,6 +17,10 @@ export interface ElementNode extends BaseNode {
     name: string;
     attributes: Node[];
     children: Node[];
+    /**
+     * only on svelte:element
+     */
+    tag?: Node;
 }
 
 export interface TextNode extends BaseNode {
@@ -118,6 +123,13 @@ export interface ClassNode extends BaseNode {
     expression: Node;
 }
 
+export interface StyleDirectiveNode extends BaseNode {
+    type: 'StyleDirective';
+    name: string;
+    value: Node[] | true;
+    modifiers?: string[];
+}
+
 export interface LetNode extends BaseNode {
     type: 'Let';
     name: string;
@@ -195,17 +207,20 @@ export interface StyleNode extends BaseNode {
     attributes: Node[];
     children: Node[];
     content: StyleProgramNode;
+    comments: CommentInfo[]; // doesn't exist on original node but we use it to store comments
 }
 
 export interface ScriptNode extends BaseNode {
     type: 'Script';
     attributes: Node[];
     content: Node;
+    comments: CommentInfo[]; // doesn't exist on original node but we use it to store comments
 }
 
 export interface StyleProgramNode extends BaseNode {
     type: 'StyleProgram';
     styles: string;
+    comments: CommentInfo[]; // doesn't exist on original node but we use it to store comments
 }
 
 export interface ProgramNode extends BaseNode {
@@ -247,6 +262,12 @@ export interface BodyNode extends BaseNode {
     attributes: Node[];
 }
 
+export interface DocumentNode extends BaseNode {
+    type: 'Document';
+    name: string;
+    attributes: Node[];
+}
+
 export interface OptionsNode extends BaseNode {
     type: 'Options';
     name: string;
@@ -258,6 +279,16 @@ export interface SlotTemplateNode extends BaseNode {
     name: string;
     attributes: Node[];
     children: Node[];
+}
+
+export interface ConstTagNode extends BaseNode {
+    type: 'ConstTag';
+    expression: Node;
+}
+
+export interface CommentInfo {
+    comment: CommentNode;
+    emptyLineAfter: boolean;
 }
 
 export type Node =
@@ -279,6 +310,7 @@ export type Node =
     | EventHandlerNode
     | BindingNode
     | ClassNode
+    | StyleDirectiveNode
     | LetNode
     | DebugTagNode
     | RefNode
@@ -300,21 +332,17 @@ export type Node =
     | InstanceScriptNode
     | ModuleScriptNode
     | BodyNode
+    | DocumentNode
     | OptionsNode
-    | SlotTemplateNode;
+    | SlotTemplateNode
+    | ConstTagNode;
 
 /**
  * The Svelte AST root node
  */
 export interface ASTNode {
     html: Node;
-    css?: Node & {
-        attributes: Node[];
-        children: Node[];
-        content: Node & {
-            styles: string;
-        };
-    };
+    css?: StyleNode;
     js?: ScriptNode;
     instance?: ScriptNode;
     module?: ScriptNode;
